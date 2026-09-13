@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Valutazione casa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --carta:#FCFCFA;
+    --alta:#F1F3EE;
+    --inchiostro:#1B211E;
+    --matita:#6B726B;
+    --riga:#DBDFD7;
+    --piu:#2F6B4F;
+    --meno:#A23A2A;
+    --raggio:6px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--carta);color:var(--inchiostro);
+    font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-size:16px;line-height:1.45;font-feature-settings:"tnum" 1;
+    -webkit-text-size-adjust:100%;
+  }
+  .guscio{max-width:34rem;margin:0 auto;padding:0 1rem 4rem}
+
+  .lettura{
+    position:sticky;top:0;z-index:5;margin:0 -1rem;padding:.8rem 1rem .7rem;
+    background:var(--carta);border-bottom:1px solid var(--riga);
+  }
+  .lettura .nome{
+    width:100%;border:0;background:transparent;padding:0 0 .3rem;
+    font:inherit;font-size:.85rem;color:var(--matita);
+  }
+  .lettura .nome::placeholder{color:var(--matita);opacity:.7}
+  .lettura .nome:focus{outline:none;color:var(--inchiostro)}
+  .valore{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap}
+  .valore b{font-size:2rem;font-weight:700;letter-spacing:-.025em;line-height:1.05}
+  .valore span{font-size:.9rem;color:var(--matita)}
+  .valore.scatto b{animation:scatto .35s ease-out}
+  @keyframes scatto{from{opacity:.35}to{opacity:1}}
+  .livella{margin-top:.55rem}
+  .livella .pista{position:relative;height:9px;background:var(--alta);border:1px solid var(--riga);border-radius:2px}
+  .livella .pista::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--inchiostro)}
+  .livella i{position:absolute;top:1px;bottom:1px;display:block;border-radius:1px}
+  .livella .etichetta{display:flex;justify-content:space-between;font-size:.72rem;color:var(--matita);margin-top:.25rem}
+  .allarme{font-size:.78rem;color:var(--meno);margin-top:.3rem}
+
+  h2{font-size:.95rem;font-weight:600;margin:1.8rem 0 .6rem;padding-bottom:.3rem;border-bottom:1px solid var(--riga)}
+  h2 small{font-weight:400;color:var(--matita);font-size:.8rem}
+  .campo{margin:.75rem 0}
+  .campo > label{display:block;font-size:.85rem;color:var(--matita);margin-bottom:.25rem}
+  .aiuto{font-size:.78rem;color:var(--matita);margin-top:.3rem}
+  input[type=text],input[type=number],select{
+    width:100%;font:inherit;font-size:1rem;padding:.55rem .6rem;
+    background:var(--alta);color:var(--inchiostro);
+    border:1px solid var(--riga);border-radius:var(--raggio);
+    appearance:none;-webkit-appearance:none;
+  }
+  select{
+    background-image:linear-gradient(45deg,transparent 50%,var(--matita) 50%),linear-gradient(135deg,var(--matita) 50%,transparent 50%);
+    background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:2rem;
+  }
+  input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--piu);outline-offset:1px}
+  .coppia{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+  .scelte{display:flex;gap:.35rem;flex-wrap:wrap}
+  .scelte button{
+    font:inherit;font-size:.88rem;padding:.45rem .7rem;cursor:pointer;
+    background:var(--alta);color:var(--matita);border:1px solid var(--riga);border-radius:var(--raggio);
+  }
+  .scelte button[aria-pressed=true]{background:var(--inchiostro);color:var(--alta);border-color:var(--inchiostro)}
+
+  .spazio{display:grid;grid-template-columns:1fr 64px 56px 30px;gap:.4rem;align-items:center;margin-bottom:.4rem}
+  .spazio input{padding:.45rem .4rem;font-size:.92rem;text-align:right}
+  .spazio select{padding:.45rem 1.6rem .45rem .5rem;font-size:.92rem;background-position:calc(100% - 13px) 50%,calc(100% - 8px) 50%}
+  .spazio .sp-via{font:inherit;font-size:1.1rem;line-height:1;padding:.3rem 0;cursor:pointer;color:var(--matita);background:none;border:0}
+  .sp-testa{display:grid;grid-template-columns:1fr 64px 56px 30px;gap:.4rem;font-size:.72rem;color:var(--matita);margin-bottom:.25rem}
+  .sp-testa span:nth-child(2),.sp-testa span:nth-child(3){text-align:right}
+  .aggiungi{
+    font:inherit;font-size:.9rem;padding:.5rem .8rem;cursor:pointer;width:100%;
+    background:var(--alta);color:var(--inchiostro);border:1px dashed var(--riga);border-radius:var(--raggio);
+  }
+
+  .riga-voce{display:grid;grid-template-columns:1fr 56px 96px;gap:.5rem;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--riga);font-size:.88rem}
+  .riga-voce .nome{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .riga-voce .eur{text-align:right;font-variant-numeric:tabular-nums}
+  .riga-voce .mini{position:relative;height:8px;background:var(--alta);border:1px solid var(--riga);border-radius:2px}
+  .riga-voce .mini::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--riga)}
+  .riga-voce .mini i{position:absolute;top:1px;bottom:1px;border-radius:1px}
+  .riga-voce.somma{border-bottom:0;border-top:2px solid var(--inchiostro);margin-top:.3rem;padding-top:.5rem;font-weight:600;font-size:.95rem}
+  .riga-costo{display:flex;justify-content:space-between;gap:.5rem;padding:.35rem 0;border-bottom:1px solid var(--riga);font-size:.88rem}
+  .riga-costo:last-child{border-bottom:0}
+  .riga-costo.somma{border-top:2px solid var(--inchiostro);border-bottom:0;margin-top:.3rem;padding-top:.5rem;font-weight:600;font-size:.95rem}
+  .riga-costo .eur{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .vuoto{font-size:.85rem;color:var(--matita);padding:.4rem 0}
+  .piu{color:var(--piu)}
+  .meno{color:var(--meno)}
+
+  .verdetto{margin-top:.7rem;padding:.75rem .8rem;border-radius:var(--raggio);background:var(--alta);border:1px solid var(--riga);font-size:.92rem}
+  .verdetto b{font-size:1.2rem;display:block;margin-bottom:.15rem}
+
+  .azioni{display:flex;gap:.5rem;margin-top:1.6rem}
+  .azioni button{flex:1;font:inherit;font-size:.95rem;padding:.7rem;cursor:pointer;background:var(--alta);border:1px solid var(--riga);border-radius:var(--raggio);color:var(--inchiostro)}
+  .secondarie{display:flex;gap:1.2rem;margin-top:.6rem;flex-wrap:wrap}
+  .secondarie button{font:inherit;font-size:.85rem;background:none;border:0;padding:0;color:var(--matita);text-decoration:underline;cursor:pointer}
+  .messaggio{font-size:.85rem;color:var(--matita);margin-top:.5rem;min-height:1.2em}
+  #riepilogo{width:100%;margin-top:.6rem;min-height:9rem;font:inherit;font-size:.78rem;padding:.6rem;background:var(--alta);border:1px solid var(--riga);border-radius:var(--raggio)}
+
+  .casa{border:1px solid var(--riga);border-radius:var(--raggio);background:var(--alta);padding:.7rem .75rem;margin-bottom:.6rem}
+  .casa.corrente{border-color:var(--inchiostro)}
+  .casa h3{margin:0;font-size:1rem;font-weight:600;display:flex;justify-content:space-between;gap:.5rem;align-items:baseline}
+  .casa h3 em{font-style:normal;font-weight:400;font-size:.76rem;color:var(--matita);white-space:nowrap}
+  .casa .cifre{display:grid;grid-template-columns:1fr 1fr auto;gap:.4rem;margin-top:.5rem;font-size:.76rem;color:var(--matita)}
+  .casa .cifre b{display:block;font-size:.98rem;color:var(--inchiostro);font-weight:600}
+  .casa .cifre .scarto{align-self:center;font-size:1.05rem;font-weight:600;text-align:right}
+  .casa .pista{position:relative;height:6px;margin-top:.5rem;background:var(--carta);border:1px solid var(--riga);border-radius:2px}
+  .casa .pista::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--riga)}
+  .casa .pista i{position:absolute;top:0;bottom:0;border-radius:1px}
+  .casa .tasti{display:flex;gap:.5rem;margin-top:.6rem}
+  .casa .tasti button{font:inherit;font-size:.85rem;padding:.35rem .65rem;background:var(--carta);border:1px solid var(--riga);border-radius:var(--raggio);cursor:pointer;color:var(--inchiostro)}
+  [hidden]{display:none !important}
+
+  details{margin-top:2rem;font-size:.86rem;color:var(--matita)}
+  details summary{cursor:pointer;color:var(--inchiostro);font-weight:500}
+  details p{margin:.7rem 0}
+  details code{background:var(--alta);padding:.1rem .3rem;border-radius:3px;font-size:.85em}
+
+  @media (prefers-reduced-motion:reduce){ .valore.scatto b{animation:none} }
+</style>
+</head>
+<body>
+<div class="guscio">
+
+  <div class="lettura">
+    <input class="nome" id="nome" type="text" placeholder="Indirizzo o nome dell'immobile" autocomplete="off">
+    <div class="valore" id="blocco-valore">
+      <b id="out-valore">—</b>
+      <span id="out-mq">—</span>
+    </div>
+    <div class="livella">
+      <div class="pista"><i id="out-barra"></i></div>
+      <div class="etichetta">
+        <span>−50%</span><span id="out-coeff">rettifica 0%</span><span>+50%</span>
+      </div>
+      <div class="allarme" id="out-allarme" hidden></div>
+    </div>
+  </div>
+
+  <h2>Superficie <small>commerciale</small></h2>
+  <div class="campo">
+    <label for="supbase">Superficie principale (mq)</label>
+    <input id="supbase" type="number" inputmode="decimal" min="0" step="1" value="90">
+  </div>
+  <div id="spazi"></div>
+  <button type="button" class="aggiungi" id="btn-spazio">+ Aggiungi balcone, box, cantina…</button>
+  <div class="aiuto" id="out-superficie"></div>
+
+  <h2>Prezzo di mercato della zona</h2>
+  <div class="coppia">
+    <div class="campo">
+      <label for="prezzomin">€/mq minimo</label>
+      <input id="prezzomin" type="number" inputmode="decimal" min="0" step="50" value="1600">
+    </div>
+    <div class="campo">
+      <label for="prezzomax">€/mq massimo</label>
+      <input id="prezzomax" type="number" inputmode="decimal" min="0" step="50" value="1600">
+    </div>
+  </div>
+  <div class="campo">
+    <label for="fonte">Da dove viene questo prezzo</label>
+    <input id="fonte" type="text" placeholder="es. OMI Genova zona B4, semestre 1/2026" autocomplete="off">
+  </div>
+  <div class="aiuto" id="out-base"></div>
+
+  <h2>Coefficienti di merito</h2>
+  <div class="campo">
+    <label>Come si cumulano</label>
+    <div class="scelte" id="modo" role="group" aria-label="Modo di cumulo">
+      <button type="button" data-v="somma" aria-pressed="true">Somma sulla base</button>
+      <button type="button" data-v="cascata" aria-pressed="false">A cascata</button>
+    </div>
+    <div class="aiuto" id="nota-modo"></div>
+  </div>
+
+  <div class="campo">
+    <label>Ascensore</label>
+    <div class="scelte" id="asc" role="group" aria-label="Ascensore">
+      <button type="button" data-v="si" aria-pressed="true">Con ascensore</button>
+      <button type="button" data-v="no" aria-pressed="false">Senza ascensore</button>
+    </div>
+  </div>
+  <div class="campo">
+    <label for="piano">Piano</label>
+    <select id="piano"></select>
+  </div>
+  <div class="campo" id="campo-giardino" hidden>
+    <label>Giardino di pertinenza</label>
+    <div class="scelte" id="giardino" role="group" aria-label="Giardino">
+      <button type="button" data-v="si" aria-pressed="true">Con giardino</button>
+      <button type="button" data-v="no" aria-pressed="false">Senza giardino</button>
+    </div>
+  </div>
+  <div class="campo">
+    <label for="conservazione">Stato di conservazione</label>
+    <select id="conservazione"></select>
+  </div>
+  <div class="campo">
+    <label for="luminosita">Luminosità</label>
+    <select id="luminosita"></select>
+    <div class="aiuto" id="nota-luce"></div>
+  </div>
+  <div class="campo">
+    <label for="vista">Esposizione e vista</label>
+    <select id="vista"></select>
+  </div>
+  <div class="coppia">
+    <div class="campo">
+      <label for="eta">Età edificio</label>
+      <select id="eta"></select>
+    </div>
+    <div class="campo">
+      <label for="statoedificio">Stato edificio</label>
+      <select id="statoedificio"></select>
+    </div>
+  </div>
+  <div class="campo">
+    <label for="riscaldamento">Riscaldamento</label>
+    <select id="riscaldamento"></select>
+  </div>
+  <div class="campo">
+    <label for="locativo">Stato locativo</label>
+    <select id="locativo"></select>
+  </div>
+  <div class="campo">
+    <label for="extra">Rettifica libera in % (rumore, trattativa, quello che vuoi)</label>
+    <input id="extra" type="number" inputmode="decimal" step="1" value="0">
+  </div>
+
+  <h2>Dettaglio della stima</h2>
+  <div id="dettaglio"></div>
+
+  <h2>Costo di possesso <small>capitalizzato</small></h2>
+  <div class="coppia">
+    <div class="campo">
+      <label for="condominio">Condominio (€/anno)</label>
+      <input id="condominio" type="number" inputmode="decimal" min="0" step="50" value="0">
+    </div>
+    <div class="campo">
+      <label for="energia">Energia (€/anno)</label>
+      <input id="energia" type="number" inputmode="decimal" min="0" step="50" value="0">
+    </div>
+  </div>
+  <div class="coppia">
+    <div class="campo">
+      <label for="altritributi">IMU e altro (€/anno)</label>
+      <input id="altritributi" type="number" inputmode="decimal" min="0" step="50" value="0">
+    </div>
+    <div class="campo">
+      <label for="riferimento">Spesa normale (€/anno)</label>
+      <input id="riferimento" type="number" inputmode="decimal" min="0" step="50" value="0">
+    </div>
+  </div>
+  <div class="campo">
+    <label for="tasso">Tasso di capitalizzazione (%)</label>
+    <input id="tasso" type="number" inputmode="decimal" min="0.5" step="0.5" value="5">
+  </div>
+  <div class="aiuto" id="out-possesso"></div>
+
+  <h2>Costo d'acquisto</h2>
+  <div class="campo">
+    <label for="richiesto">Prezzo richiesto dal venditore</label>
+    <input id="richiesto" type="number" inputmode="decimal" min="0" step="1000" placeholder="es. 140000">
+  </div>
+  <div class="campo">
+    <label>Venditore</label>
+    <div class="scelte" id="venditore" role="group" aria-label="Venditore">
+      <button type="button" data-v="privato" aria-pressed="true">Privato</button>
+      <button type="button" data-v="impresa" aria-pressed="false">Impresa con IVA</button>
+    </div>
+  </div>
+  <div class="campo">
+    <label>Agevolazione prima casa</label>
+    <div class="scelte" id="primacasa" role="group" aria-label="Prima casa">
+      <button type="button" data-v="si" aria-pressed="true">Sì</button>
+      <button type="button" data-v="no" aria-pressed="false">No</button>
+    </div>
+  </div>
+  <div class="campo" id="campo-rendita">
+    <label for="rendita">Rendita catastale (€) — attiva il prezzo-valore</label>
+    <input id="rendita" type="number" inputmode="decimal" min="0" step="10" value="0">
+  </div>
+  <div class="coppia">
+    <div class="campo">
+      <label for="notaio">Notaio (€)</label>
+      <input id="notaio" type="number" inputmode="decimal" min="0" step="100" value="2000">
+    </div>
+    <div class="campo">
+      <label for="agenzia">Agenzia (% + IVA)</label>
+      <input id="agenzia" type="number" inputmode="decimal" min="0" step="0.5" value="3">
+    </div>
+  </div>
+  <div class="campo">
+    <label for="lavori">Lavori da fare (€)</label>
+    <input id="lavori" type="number" inputmode="decimal" min="0" step="1000" value="0">
+  </div>
+  <div id="costi"></div>
+
+  <h2>Verdetto</h2>
+  <div class="verdetto" id="verdetto">Inserisci il prezzo richiesto per vedere il confronto.</div>
+
+  <div class="azioni">
+    <button type="button" id="btn-salva">Salva casa</button>
+    <button type="button" id="btn-copia">Copia riepilogo</button>
+  </div>
+  <div class="secondarie">
+    <button type="button" id="btn-neutro">Azzera coefficienti</button>
+    <button type="button" id="btn-nuova" hidden>Chiudi e inizia una casa nuova</button>
+  </div>
+  <div class="messaggio" id="messaggio"></div>
+  <textarea id="riepilogo" hidden readonly aria-label="Riepilogo da copiare"></textarea>
+
+  <h2>Case salvate</h2>
+  <div class="campo" id="campo-ordine" hidden>
+    <label for="ordine">Ordina per</label>
+    <select id="ordine">
+      <option value="scarto">Affare migliore</option>
+      <option value="esborso">Esborso totale</option>
+      <option value="valore">Valore stimato</option>
+      <option value="permq">€/mq stimato</option>
+      <option value="nome">Nome</option>
+    </select>
+  </div>
+  <div id="salvate"></div>
+
+  <details>
+    <summary>Come calcola, e cosa ho dovuto decidere</summary>
+
+    <p><strong>Superficie commerciale.</strong> Le quotazioni al mq si riferiscono alla superficie commerciale, non a quella calpestabile. Metti i mq principali, poi aggiungi una riga per ogni spazio accessorio: il coefficiente di prassi si carica da solo (balcone 30%, terrazzo 35%, giardino 15%, cantina 25%, box 50%, posto auto 25%, sottotetto 30%, taverna 50%) e resta modificabile, perché sono usi di mercato che variano da zona a zona e da perito a perito, non una norma. Se i mq dell'annuncio sono già commerciali, non aggiungere righe.</p>
+
+    <p><strong>I due modi di cumulare.</strong> «Somma sulla base» è il tuo foglio: ogni coefficiente si applica al valore di partenza e poi si sommano, <code>base × (1 + c1 + c2 + …)</code>. «A cascata» applica ogni coefficiente al risultato del precedente, <code>base × (1+c1) × (1+c2) × …</code>: è il modo moltiplicativo usato nella prassi estimativa. Con pochi coefficienti piccoli la differenza è minima; quando si accumulano, la cascata resta sempre sopra zero e penalizza un po' meno.</p>
+
+    <p><strong>Soglia di allarme.</strong> Oltre ±25% di rettifica complessiva compare un avviso: non è un errore di calcolo, è il punto in cui un modello a coefficienti smette di descrivere il mercato.</p>
+
+    <p><strong>Costo di possesso.</strong> Si capitalizza solo la parte <em>eccedente</em> la spesa che consideri normale: <code>(spese annue − riferimento) ÷ tasso</code>. Se lasci il riferimento a 0 stai scontando l'intera spesa, che è una lettura pessimistica: ogni casa ha delle spese, e il mercato le ha già in parte prezzate. La classe energetica non è convertita in euro in automatico: l'APE dà kWh/m² anno, il costo dipende dal tuo €/kWh e dalle tue abitudini, quindi il numero lo metti tu nel campo Energia.</p>
+
+    <p><strong>Imposte.</strong> Da privato: registro 2% con prima casa o 9% senza, minimo 1.000 €, più ipotecaria e catastale da 50 € ciascuna. Da impresa con IVA: 4% o 10% sul prezzo, più registro, ipotecaria e catastale da 200 € ciascuna. Se inserisci la rendita catastale si applica il prezzo-valore (solo fra privati): base imponibile = rendita × 1,05 × 110 con prima casa, × 120 senza. Non sono calcolati: imposta sostitutiva sul mutuo (0,25% prima casa, 2% altrimenti), spese di perizia e istruttoria, categorie di lusso A/1, A/8, A/9 con IVA al 22%. Questo non è un calcolo fiscale: prima di firmare, i numeri te li fa il notaio.</p>
+
+    <p><strong>Il punto debole resta la base.</strong> Un errore del 10% sul €/mq pesa più di quattro coefficienti azzeccati. Per questo il prezzo si inserisce come forbice minimo–massimo (le quotazioni OMI dell'Agenzia delle Entrate sono già in questa forma) e la stima esce come intervallo. Non usare il prezzo richiesto per questa casa come base: il conto girerebbe su sé stesso.</p>
+
+    <p><strong>Doppio conteggio.</strong> «Da ristrutturare» e «edificio scadente» descrivono in parte lo stesso difetto, così come luminosità ed esposizione. Sono voci separate perché così stanno nelle tue tabelle, ma sommandole rischi di penalizzare due volte la stessa cosa.</p>
+  </details>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var T = {
+    piano: [
+      {t:"Seminterrato",            asc:-0.25, noasc:-0.25},
+      {t:"Piano terra o rialzato",  asc:-0.10, noasc:-0.10, giardino:true},
+      {t:"Piano 1°",                asc:-0.10, noasc:-0.10},
+      {t:"Piano 2°",                asc:-0.03, noasc:-0.15},
+      {t:"Piano 3°",                asc: 0.00, noasc:-0.20},
+      {t:"Piani superiori",         asc: 0.05, noasc:-0.30},
+      {t:"Ultimo piano",            asc: 0.10, noasc:-0.30},
+      {t:"Attico",                  asc: 0.20, noasc:-0.20}
+    ],
+    conservazione: [
+      {t:"Da ristrutturare",        v:-0.10},
+      {t:"Buono stato",             v: 0.00},
+      {t:"Ristrutturato",           v: 0.05},
+      {t:"Finemente ristrutturato", v: 0.10},
+      {t:"Nuova costruzione",       v: 0.10}
+    ],
+    luminosita: [
+      {t:"Molto luminoso",      v: 0.10, n:"Sole diretto per l'intero arco del giorno"},
+      {t:"Luminoso",            v: 0.05, n:"Sole diretto per buona parte del giorno"},
+      {t:"Mediamente luminoso", v: 0.00, n:"Sole diretto solo in parte del giorno"},
+      {t:"Poco luminoso",       v:-0.05, n:"Sole diretto per poco tempo, o assente"}
+    ],
+    vista: [
+      {t:"Esterna panoramica",    v: 0.10},
+      {t:"Esterna",               v: 0.05},
+      {t:"Mista",                 v: 0.00},
+      {t:"Interna",               v:-0.05},
+      {t:"Completamente interna", v:-0.10}
+    ],
+    eta: [
+      {t:"1 – 20 anni",   ottimo:0.00, normale:0, scadente:-0.05},
+      {t:"20 – 40 anni",  ottimo:0.05, normale:0, scadente:-0.10},
+      {t:"Oltre 40 anni", ottimo:0.10, normale:0, scadente:-0.15}
+    ],
+    statoedificio: [
+      {t:"Ottimo stato", k:"ottimo"},
+      {t:"Normale",      k:"normale"},
+      {t:"Scadente",     k:"scadente"}
+    ],
+    riscaldamento: [
+      {t:"Autonomo",                           v: 0.05},
+      {t:"Centralizzato con contabilizzatore", v: 0.02},
+      {t:"Centralizzato",                      v: 0.00},
+      {t:"Assente",                            v:-0.05}
+    ],
+    locativo: [
+      {t:"Libera",                                 v: 0.00},
+      {t:"Locata a canone libero (4+4)",           v:-0.20},
+      {t:"Locata stagionalmente per brevi periodi",v:-0.05}
+    ]
+  };
+
+  var TIPI = [
+    {t:"Balcone",                 q:30},
+    {t:"Terrazzo",                q:35},
+    {t:"Giardino",                q:15},
+    {t:"Cantina o soffitta",      q:25},
+    {t:"Box o garage",            q:50},
+    {t:"Posto auto scoperto",     q:25},
+    {t:"Sottotetto non abitabile",q:30},
+    {t:"Taverna o seminterrato",  q:50},
+    {t:"Altro",                   q:50}
+  ];
+
+  var $ = function(id){ return document.getElementById(id); };
+  var eur = new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0});
+  var num = new Intl.NumberFormat("it-IT",{maximumFractionDigits:0});
+  var num1 = new Intl.NumberFormat("it-IT",{maximumFractionDigits:1});
+  function pct(x){
+    var s = (x*100).toFixed(1).replace(".",",").replace(",0","");
+    return (x>0?"+":x<0?"−":"") + s.replace("-","") + "%";
+  }
+  function segno(x){ return (x>0?"+":x<0?"−":"") + eur.format(Math.abs(Math.round(x))); }
+  function n(el){ var v = parseFloat(el.value); return isFinite(v) ? v : 0; }
+
+  /* ---------- costruzione dei comandi ---------- */
+  function riempi(sel, righe){
+    sel.innerHTML = "";
+    righe.forEach(function(r,i){
+      var o = document.createElement("option");
+      o.value = i; o.textContent = r.t;
+      sel.appendChild(o);
+    });
+  }
+  var SELECTS = ["piano","conservazione","luminosita","vista","eta","statoedificio","riscaldamento","locativo"];
+  SELECTS.forEach(function(k){ riempi($(k), T[k]); });
+
+  function rigaSpazio(i, mq, q){
+    var opzioni = TIPI.map(function(t,k){
+      return '<option value="' + k + '"' + (k === i ? " selected" : "") + '>' + t.t + '</option>';
+    }).join("");
+    return '<div class="spazio">' +
+      '<select class="sp-tipo" aria-label="Tipo di spazio">' + opzioni + '</select>' +
+      '<input class="sp-mq" type="number" inputmode="decimal" min="0" step="1" value="' + mq + '" aria-label="metri quadri">' +
+      '<input class="sp-q" type="number" inputmode="decimal" min="0" max="100" step="5" value="' + q + '" aria-label="percentuale che conta">' +
+      '<button type="button" class="sp-via" aria-label="Rimuovi questa voce">×</button></div>';
+  }
+  function testaSpazi(){
+    return '<div class="sp-testa"><span>Spazio</span><span>mq</span><span>conta %</span><span></span></div>';
+  }
+  function aggiungiSpazio(i, mq, q){
+    var box = $("spazi");
+    if(!box.querySelector(".sp-testa")) box.insertAdjacentHTML("beforeend", testaSpazi());
+    box.insertAdjacentHTML("beforeend", rigaSpazio(i, mq, q));
+  }
+  function svuotaSpazi(){ $("spazi").innerHTML = ""; }
+
+  $("btn-spazio").addEventListener("click", function(){
+    aggiungiSpazio(0, 0, TIPI[0].q);
+    calcola();
+  });
+  $("spazi").addEventListener("input", function(ev){
+    if(ev.target.classList.contains("sp-tipo")){
+      var riga = ev.target.closest(".spazio");
+      riga.querySelector(".sp-q").value = TIPI[+ev.target.value].q;   // riporta il coefficiente di prassi
+    }
+    calcola();
+  });
+  $("spazi").addEventListener("click", function(ev){
+    if(!ev.target.classList.contains("sp-via")) return;
+    ev.target.closest(".spazio").remove();
+    if(!$("spazi").querySelector(".spazio")) svuotaSpazi();
+    calcola();
+  });
+
+  // stato di partenza = il primo esempio del foglio: 90 mq × 1600 → 125.280 €
+  $("piano").value = 3; $("conservazione").value = 0; $("luminosita").value = 1;
+  $("vista").value = 2; $("eta").value = 1; $("statoedificio").value = 2;
+  $("riscaldamento").value = 0; $("locativo").value = 0;
+
+  var gruppi = {asc:"si", giardino:"si", modo:"somma", venditore:"privato", primacasa:"si"};
+  function aggiornaGruppo(id){
+    Array.prototype.forEach.call($(id).querySelectorAll("button"), function(x){
+      x.setAttribute("aria-pressed", String(x.dataset.v === gruppi[id]));
+    });
+  }
+  ["asc","giardino","modo","venditore","primacasa"].forEach(function(id){
+    $(id).addEventListener("click", function(e){
+      var b = e.target.closest("button"); if(!b) return;
+      gruppi[id] = b.dataset.v;
+      aggiornaGruppo(id);
+      calcola();
+    });
+  });
+
+  /* ---------- lettura e scrittura dello stato ---------- */
+  function leggiStato(){
+    var s = {
+      nome: $("nome").value.trim(), fonte: $("fonte").value.trim(),
+      supbase: n($("supbase")),
+      spazi: Array.prototype.map.call(document.querySelectorAll("#spazi .spazio"), function(r){
+        var v = function(sel){ var x = parseFloat(r.querySelector(sel).value); return isFinite(x) ? x : 0; };
+        return {i:+r.querySelector(".sp-tipo").value, mq:v(".sp-mq"), q:v(".sp-q")};
+      }),
+      prezzomin: n($("prezzomin")), prezzomax: n($("prezzomax")),
+      modo: gruppi.modo, asc: gruppi.asc, giardino: gruppi.giardino,
+      extra: n($("extra")),
+      condominio: n($("condominio")), energia: n($("energia")),
+      altritributi: n($("altritributi")), riferimento: n($("riferimento")), tasso: n($("tasso")),
+      richiesto: n($("richiesto")), venditore: gruppi.venditore, primacasa: gruppi.primacasa,
+      rendita: n($("rendita")), notaio: n($("notaio")), agenzia: n($("agenzia")), lavori: n($("lavori"))
+    };
+    SELECTS.forEach(function(k){ s[k] = +$(k).value; });
+    return s;
+  }
+
+  function scriviStato(s){
+    $("nome").value = s.nome || "";
+    $("fonte").value = s.fonte || "";
+    gruppi.modo = s.modo || "somma";
+    gruppi.asc = s.asc || "si"; gruppi.giardino = s.giardino || "si";
+    gruppi.venditore = s.venditore || "privato"; gruppi.primacasa = s.primacasa || "si";
+    ["asc","giardino","modo","venditore","primacasa"].forEach(aggiornaGruppo);
+    $("supbase").value = s.supbase || 0;
+    svuotaSpazi();
+    (s.spazi || []).forEach(function(x){ aggiungiSpazio(x.i, x.mq, x.q); });
+    $("prezzomin").value = s.prezzomin || 0;
+    $("prezzomax").value = s.prezzomax || 0;
+    SELECTS.forEach(function(k){ if(s[k] != null) $(k).value = s[k]; });
+    ["extra","condominio","energia","altritributi","riferimento","tasso","richiesto","rendita","notaio","agenzia","lavori"]
+      .forEach(function(k){ $(k).value = s[k] != null ? s[k] : 0; });
+    calcola();
+  }
+
+  /* ---------- calcolo puro ---------- */
+  function superficie(s){
+    return (s.supbase || 0) + (s.spazi || []).reduce(function(a,x){ return a + x.mq * (x.q/100); }, 0);
+  }
+
+  function voci(s){
+    var v = [];
+    var p = T.piano[s.piano];
+    var conAsc = s.asc === "si";
+    var cp = conAsc ? p.asc : p.noasc;
+    var et = p.t + (conAsc ? " con ascensore" : " senza ascensore");
+    if(p.giardino && s.giardino === "no"){ cp = -0.20; et = p.t + ", senza giardino"; }
+    v.push({t:"Piano", d:et, c:cp});
+    v.push({t:"Conservazione", d:T.conservazione[s.conservazione].t, c:T.conservazione[s.conservazione].v});
+    v.push({t:"Luminosità", d:T.luminosita[s.luminosita].t, c:T.luminosita[s.luminosita].v});
+    v.push({t:"Esposizione", d:T.vista[s.vista].t, c:T.vista[s.vista].v});
+    var e = T.eta[s.eta], se = T.statoedificio[s.statoedificio];
+    v.push({t:"Edificio", d:e.t + ", " + se.t.toLowerCase(), c:e[se.k]});
+    v.push({t:"Riscaldamento", d:T.riscaldamento[s.riscaldamento].t, c:T.riscaldamento[s.riscaldamento].v});
+    v.push({t:"Stato locativo", d:T.locativo[s.locativo].t, c:T.locativo[s.locativo].v});
+    var x = (s.extra || 0)/100;
+    if(x) v.push({t:"Rettifica libera", d:"inserita a mano", c:x});
+    return v;
+  }
+
+  function applica(base, elenco, modo){
+    var righe = [], corrente = base;
+    elenco.forEach(function(r){
+      var delta = modo === "cascata" ? corrente * r.c : base * r.c;
+      corrente += delta;
+      righe.push({t:r.t, d:r.d, c:r.c, delta:delta});
+    });
+    return {righe:righe, valore:corrente};
+  }
+
+  function imposte(s){
+    var prezzo = s.richiesto;
+    var righe = [];
+    if(!prezzo) return {righe:righe, totale:0};
+    if(s.venditore === "impresa"){
+      var aliquota = s.primacasa === "si" ? 0.04 : 0.10;
+      righe.push({t:"IVA " + (aliquota*100) + "% sul prezzo", v: prezzo*aliquota});
+      righe.push({t:"Registro, ipotecaria, catastale (fisse)", v: 600});
+    } else {
+      var perc = s.primacasa === "si" ? 0.02 : 0.09;
+      var molt = s.primacasa === "si" ? 110 : 120;
+      var imponibile = s.rendita > 0 ? s.rendita * 1.05 * molt : prezzo;
+      var reg = Math.max(imponibile * perc, 1000);
+      righe.push({
+        t:"Registro " + (perc*100) + "% su " + (s.rendita > 0 ? "valore catastale " + eur.format(Math.round(imponibile)) : "prezzo"),
+        v: reg
+      });
+      righe.push({t:"Ipotecaria e catastale", v: 100});
+    }
+    return {righe:righe, totale: righe.reduce(function(a,b){ return a+b.v; },0)};
+  }
+
+  function esito(s){
+    var sup = superficie(s);
+    var pmin = s.prezzomin || 0;
+    var pmax = s.prezzomax > 0 ? s.prezzomax : pmin;
+    var baseMin = sup * Math.min(pmin, pmax), baseMax = sup * Math.max(pmin, pmax);
+    var elenco = voci(s);
+    var a = applica(baseMin, elenco, s.modo);
+    var b = applica(baseMax, elenco, s.modo);
+    var centrale = (a.valore + b.valore)/2;
+    var k = baseMin ? a.valore/baseMin - 1 : 0;
+    var kAltro = baseMin ? applica(baseMin, elenco, s.modo === "somma" ? "cascata" : "somma").valore/baseMin - 1 : 0;
+
+    var spese = (s.condominio||0) + (s.energia||0) + (s.altritributi||0) - (s.riferimento||0);
+    var capitale = s.tasso ? spese / (s.tasso/100) : 0;
+
+    var imp = imposte(s);
+    var agenzia = s.richiesto * (s.agenzia||0)/100 * 1.22;
+    var esborso = s.richiesto ? s.richiesto + imp.totale + (s.notaio||0) + agenzia + (s.lavori||0) : 0;
+
+    return {
+      sup:sup, baseMin:baseMin, baseMax:baseMax, base:(baseMin+baseMax)/2,
+      righe:a.righe, righeMax:b.righe,
+      valMin:a.valore, valMax:b.valore, valore:centrale,
+      permq: sup ? centrale/sup : 0,
+      k:k, kAltro:kAltro,
+      capitale:capitale, netto: centrale - capitale, nettoMin: a.valore - capitale, nettoMax: b.valore - capitale,
+      imposte:imp, agenzia:agenzia, esborso:esborso,
+      scarto: (s.richiesto && centrale) ? (esborso - (centrale - capitale)) / (centrale - capitale) : null
+    };
+  }
+
+  /* ---------- archivio ---------- */
+  var CHIAVE = "valutazione:case";
+
+  // Dove finiscono le case salvate: dentro Claude c'è lo storage degli artifact,
+  // su un sito normale (GitHub Pages, file locale) si usa quello del browser.
+  var MEM = (function(){
+    if(window.storage && window.storage.get){
+      return {
+        tipo:"claude",
+        leggi:function(){ return window.storage.get(CHIAVE).then(function(r){ return r && r.value ? r.value : null; }); },
+        scrivi:function(t){ return window.storage.set(CHIAVE, t); }
+      };
+    }
+    try{
+      var prova = "__prova__";
+      window.localStorage.setItem(prova, "1");
+      window.localStorage.removeItem(prova);
+      return {
+        tipo:"browser",
+        leggi:function(){ return Promise.resolve(window.localStorage.getItem(CHIAVE)); },
+        scrivi:function(t){ window.localStorage.setItem(CHIAVE, t); return Promise.resolve(true); }
+      };
+    } catch(e){
+      return {tipo:"nessuno"};   // navigazione privata, cookie bloccati, disco pieno
+    }
+  })();
+
+  var archivio = [], apertaId = null, confermaId = null;
+  var archivioAttivo = MEM.tipo !== "nessuno";
+  function avviso(t){ $("messaggio").textContent = t || ""; }
+
+  function caricaArchivio(){
+    if(!archivioAttivo){ avviso("Questo browser non permette di salvare: usa «Copia riepilogo»."); disegnaArchivio(); return; }
+    MEM.leggi()
+      .then(function(t){ archivio = t ? JSON.parse(t) : []; })
+      .catch(function(){ archivio = []; })
+      .then(disegnaArchivio);
+  }
+  function scriviArchivio(){
+    if(!archivioAttivo) return Promise.resolve(false);
+    return MEM.scrivi(JSON.stringify(archivio))
+      .then(function(){ return true; }).catch(function(){ return false; });
+  }
+  function ordinaArchivio(){
+    var modo = $("ordine").value;
+    var l = archivio.map(function(c){ return {c:c, e:esito(c)}; });
+    l.sort(function(a,b){
+      if(modo === "nome") return (a.c.nome||"").localeCompare(b.c.nome||"");
+      if(modo === "valore") return b.e.valore - a.e.valore;
+      if(modo === "permq") return a.e.permq - b.e.permq;
+      if(modo === "esborso") return (a.e.esborso||Infinity) - (b.e.esborso||Infinity);
+      var sa = a.e.scarto, sb = b.e.scarto;
+      if(sa === null && sb === null) return 0;
+      if(sa === null) return 1;
+      if(sb === null) return -1;
+      return sa - sb;
+    });
+    return l;
+  }
+  function disegnaArchivio(){
+    var box = $("salvate");
+    $("campo-ordine").hidden = archivio.length < 2;
+    $("btn-nuova").hidden = apertaId === null;
+    $("btn-salva").textContent = apertaId === null ? "Salva casa" : "Aggiorna casa";
+    if(!archivio.length){
+      box.innerHTML = '<div class="vuoto">' + (archivioAttivo
+        ? "Nessuna casa salvata. Dai un nome in alto e premi «Salva casa»."
+        : "Archivio non disponibile in questa finestra.") + '</div>';
+      return;
+    }
+    box.innerHTML = ordinaArchivio().map(function(r){
+      var c = r.c, e = r.e;
+      var scarto = e.scarto === null ? "—" : pct(e.scarto);
+      var colore = e.scarto === null ? "" : (e.scarto > 0 ? "meno" : "piu");
+      var w = e.scarto === null ? 0 : Math.min(Math.abs(e.scarto)/0.3, 1) * 50;
+      var stile = e.scarto === null ? "" : (e.scarto >= 0
+        ? 'left:50%;width:' + w + '%;background:var(--meno)'
+        : 'right:50%;width:' + w + '%;background:var(--piu)');
+      return '<article class="' + (c.id === apertaId ? "casa corrente" : "casa") + '">' +
+        '<h3><span>' + (c.nome || "Senza nome") + '</span><em>' + num1.format(e.sup) + ' mq · ' + num.format(Math.round(e.permq)) + ' €/mq</em></h3>' +
+        '<div class="cifre">' +
+          '<span>Stima netta<b>' + eur.format(Math.round(e.netto)) + '</b></span>' +
+          '<span>Esborso<b>' + (e.esborso ? eur.format(Math.round(e.esborso)) : "—") + '</b></span>' +
+          '<span class="scarto ' + colore + '">' + scarto + '</span>' +
+        '</div>' +
+        (e.scarto === null ? "" : '<div class="pista"><i style="' + stile + '"></i></div>') +
+        '<div class="tasti">' +
+          '<button type="button" data-apri="' + c.id + '">Apri</button>' +
+          '<button type="button" data-elimina="' + c.id + '">' + (confermaId === c.id ? "Confermi?" : "Elimina") + '</button>' +
+        '</div></article>';
+    }).join("");
+  }
+
+  $("salvate").addEventListener("click", function(ev){
+    var b = ev.target.closest("button"); if(!b) return;
+    var ia = b.getAttribute("data-apri"), ie = b.getAttribute("data-elimina");
+    if(ia){
+      var c = archivio.filter(function(x){ return x.id === ia; })[0];
+      if(c){ apertaId = ia; confermaId = null; scriviStato(c); disegnaArchivio();
+             avviso("Aperta: " + (c.nome || "senza nome")); window.scrollTo({top:0,behavior:"smooth"}); }
+    } else if(ie){
+      if(confermaId !== ie){ confermaId = ie; disegnaArchivio(); return; }
+      archivio = archivio.filter(function(x){ return x.id !== ie; });
+      if(apertaId === ie) apertaId = null;
+      confermaId = null;
+      scriviArchivio().then(function(ok){ avviso(ok ? "Eliminata." : "Non sono riuscito a scrivere l'archivio."); disegnaArchivio(); });
+    }
+  });
+  $("ordine").addEventListener("change", disegnaArchivio);
+
+  $("btn-salva").addEventListener("click", function(){
+    var s = leggiStato();
+    if(!s.nome){ avviso("Dai un nome all'immobile prima di salvarlo."); $("nome").focus(); return; }
+    if(!esito(s).base){ avviso("Servono superficie e prezzo al mq."); return; }
+    if(!archivioAttivo){ avviso("Questo browser non permette di salvare: usa «Copia riepilogo»."); return; }
+    if(apertaId){ s.id = apertaId; archivio = archivio.map(function(x){ return x.id === apertaId ? s : x; }); }
+    else { s.id = String(Date.now()); apertaId = s.id; archivio.push(s); }
+    scriviArchivio().then(function(ok){ avviso(ok ? "Salvata: " + s.nome : "Salvataggio non riuscito."); disegnaArchivio(); });
+  });
+  $("btn-nuova").addEventListener("click", function(){
+    apertaId = null; $("nome").value = ""; $("richiesto").value = ""; $("rendita").value = 0;
+    avviso("Nuova casa: i coefficienti restano, cambia quelli che servono.");
+    calcola(); disegnaArchivio(); window.scrollTo({top:0,behavior:"smooth"});
+  });
+  $("btn-neutro").addEventListener("click", function(){
+    $("piano").value = 4; gruppi.asc = "si"; gruppi.giardino = "si";
+    aggiornaGruppo("asc"); aggiornaGruppo("giardino");
+    $("conservazione").value = 1; $("luminosita").value = 2; $("vista").value = 2;
+    $("eta").value = 0; $("statoedificio").value = 1; $("riscaldamento").value = 2;
+    $("locativo").value = 0; $("extra").value = 0;
+    calcola();
+  });
+
+  /* ---------- disegno ---------- */
+  var ultimoValore = null;
+
+  function calcola(){
+    $("campo-giardino").hidden = !T.piano[+$("piano").value].giardino;
+    $("campo-rendita").hidden = gruppi.venditore !== "privato";
+    $("nota-luce").textContent = T.luminosita[+$("luminosita").value].n;
+
+    var s = leggiStato();
+    var e = esito(s);
+
+    $("nota-modo").textContent = s.modo === "somma"
+      ? "base × (1 + c1 + c2 + …) — il modo del tuo foglio"
+      : "base × (1+c1) × (1+c2) × … — il modo moltiplicativo della prassi estimativa";
+
+    var aggiunta = e.sup - (s.supbase || 0);
+    $("out-superficie").textContent = s.spazi.length
+      ? "Superficie commerciale: " + num1.format(e.sup) + " mq (" + num1.format(s.supbase) + " principali + " + num1.format(aggiunta) + " ragguagliati)"
+      : "Superficie commerciale: " + num1.format(e.sup) + " mq";
+    $("out-base").textContent = e.base
+      ? "Base di mercato: " + eur.format(Math.round(e.baseMin)) + (e.baseMax !== e.baseMin ? " – " + eur.format(Math.round(e.baseMax)) : "")
+      : "Inserisci superficie e prezzo al mq.";
+
+    // testata
+    var singolo = Math.round(e.valMin) === Math.round(e.valMax);
+    $("out-valore").textContent = e.base
+      ? (singolo ? eur.format(Math.round(e.valore)) : eur.format(Math.round(e.valMin)) + " – " + eur.format(Math.round(e.valMax)))
+      : "—";
+    $("out-mq").textContent = e.base && e.sup ? num.format(Math.round(e.permq)) + " €/mq stimati" : "—";
+    $("out-coeff").textContent = "rettifica " + pct(e.k);
+    var barra = $("out-barra");
+    barra.style.width = Math.min(Math.abs(e.k)/0.5, 1)*50 + "%";
+    barra.style.background = e.k >= 0 ? "var(--piu)" : "var(--meno)";
+    barra.style.left = e.k >= 0 ? "50%" : "auto";
+    barra.style.right = e.k >= 0 ? "auto" : "50%";
+    var all = $("out-allarme");
+    all.hidden = Math.abs(e.k) <= 0.25;
+    all.textContent = "Rettifica oltre ±25%: qui il modello descrive più le tue caselle che il mercato.";
+
+    if(ultimoValore !== null && Math.round(e.valore) !== ultimoValore){
+      var bv = $("blocco-valore"); bv.classList.remove("scatto"); void bv.offsetWidth; bv.classList.add("scatto");
+    }
+    ultimoValore = Math.round(e.valore);
+
+    // dettaglio coefficienti
+    var html = '<div class="riga-voce"><span class="nome">Base di mercato</span><span></span><span class="eur">' +
+               (e.base ? eur.format(Math.round(e.base)) : "—") + '</span></div>';
+    e.righe.forEach(function(r, i){
+      var delta = (r.delta + e.righeMax[i].delta)/2;
+      var w = Math.min(Math.abs(r.c)/0.3, 1)*50;
+      var stile = r.c >= 0 ? 'left:50%;width:' + w + '%;background:var(--piu)'
+                           : 'right:50%;width:' + w + '%;background:var(--meno)';
+      html += '<div class="riga-voce">' +
+        '<span class="nome">' + r.t + ' · <span style="color:var(--matita)">' + r.d + '</span></span>' +
+        '<span class="mini">' + (r.c ? '<i style="' + stile + '"></i>' : '') + '</span>' +
+        '<span class="eur ' + (r.c>0?'piu':r.c<0?'meno':'') + '">' + (r.c ? pct(r.c) + "  " + segno(delta) : "0") + '</span></div>';
+    });
+    html += '<div class="riga-voce somma"><span class="nome">Valore di mercato</span><span class="eur">' + pct(e.k) + '</span><span class="eur">' +
+            (e.base ? eur.format(Math.round(e.valore)) : "—") + '</span></div>';
+    if(e.base && Math.abs(e.k - e.kAltro) > 0.0005){
+      html += '<div class="vuoto">Con l\'altro modo di cumulo: ' + pct(e.kAltro) + " → " +
+              eur.format(Math.round(e.base*(1+e.kAltro))) + ' (differenza ' + segno(e.base*(e.kAltro-e.k)) + ')</div>';
+    }
+    $("dettaglio").innerHTML = html;
+
+    // costo di possesso
+    var eccedenza = (s.condominio+s.energia+s.altritributi) - s.riferimento;
+    $("out-possesso").textContent = eccedenza
+      ? "Spesa oltre il riferimento: " + eur.format(Math.round(eccedenza)) + "/anno → " +
+        segno(-e.capitale) + " di valore (capitalizzata al " + num1.format(s.tasso) + "%)"
+      : "Nessuna spesa eccedente il riferimento: il valore non viene ritoccato.";
+
+    // costi d'acquisto
+    if(!s.richiesto){
+      $("costi").innerHTML = '<div class="vuoto">Inserisci il prezzo richiesto per vedere l\'esborso totale.</div>';
+    } else {
+      var c = '<div class="riga-costo"><span>Prezzo richiesto</span><span class="eur">' + eur.format(Math.round(s.richiesto)) + '</span></div>';
+      e.imposte.righe.forEach(function(r){
+        c += '<div class="riga-costo"><span>' + r.t + '</span><span class="eur">' + eur.format(Math.round(r.v)) + '</span></div>';
+      });
+      if(s.notaio) c += '<div class="riga-costo"><span>Notaio</span><span class="eur">' + eur.format(Math.round(s.notaio)) + '</span></div>';
+      if(e.agenzia) c += '<div class="riga-costo"><span>Agenzia ' + num1.format(s.agenzia) + '% + IVA</span><span class="eur">' + eur.format(Math.round(e.agenzia)) + '</span></div>';
+      if(s.lavori) c += '<div class="riga-costo"><span>Lavori</span><span class="eur">' + eur.format(Math.round(s.lavori)) + '</span></div>';
+      c += '<div class="riga-costo somma"><span>Esborso totale</span><span class="eur">' + eur.format(Math.round(e.esborso)) + '</span></div>';
+      if(e.sup) c += '<div class="vuoto">Costo reale al mq: ' + num.format(Math.round(e.esborso/e.sup)) + ' €/mq</div>';
+      $("costi").innerHTML = c;
+    }
+
+    // verdetto
+    var v = $("verdetto");
+    if(!s.richiesto || !e.base){
+      v.innerHTML = "Inserisci il prezzo richiesto per vedere il confronto.";
+    } else {
+      var diff = e.esborso - e.netto;
+      var dentro = e.esborso >= Math.min(e.nettoMin, e.nettoMax) && e.esborso <= Math.max(e.nettoMin, e.nettoMax);
+      var colore = dentro ? "" : (diff > 0 ? "meno" : "piu");
+      v.innerHTML = '<b class="' + colore + '">' + segno(diff) + " (" + pct(e.scarto) + ")</b>" +
+        "Esborso totale " + eur.format(Math.round(e.esborso)) + " contro un valore netto stimato di " +
+        eur.format(Math.round(e.nettoMin)) + (Math.round(e.nettoMin) !== Math.round(e.nettoMax) ? " – " + eur.format(Math.round(e.nettoMax)) : "") + ". " +
+        (dentro ? "Sei dentro la forbice: prezzo difendibile."
+                : diff > 0 ? "Sopra la forbice: da recuperare in trattativa " + eur.format(Math.abs(Math.round(diff))) + "."
+                           : "Sotto la forbice: margine a tuo favore.");
+    }
+  }
+
+  /* ---------- riepilogo ---------- */
+  function testoRiepilogo(){
+    var s = leggiStato(), e = esito(s), r = [];
+    r.push("VALUTAZIONE — " + (s.nome || "immobile senza nome"));
+    r.push(num1.format(e.sup) + " mq commerciali × " + num.format(s.prezzomin) +
+           (s.prezzomax && s.prezzomax !== s.prezzomin ? "–" + num.format(s.prezzomax) : "") + " €/mq" +
+           (s.fonte ? "  (" + s.fonte + ")" : ""));
+    r.push("Base: " + eur.format(Math.round(e.base)));
+    r.push("Cumulo: " + (s.modo === "somma" ? "somma sulla base" : "a cascata"));
+    r.push("");
+    e.righe.forEach(function(x,i){
+      r.push("• " + x.t + " (" + x.d + "): " + pct(x.c) + "  " + segno((x.delta + e.righeMax[i].delta)/2));
+    });
+    r.push("");
+    r.push("Rettifica totale: " + pct(e.k));
+    r.push("Valore di mercato: " + eur.format(Math.round(e.valMin)) + " – " + eur.format(Math.round(e.valMax)));
+    if(e.capitale) r.push("Costi ricorrenti capitalizzati: " + segno(-e.capitale));
+    r.push("Valore netto: " + eur.format(Math.round(e.netto)));
+    if(s.richiesto){
+      r.push("");
+      r.push("Prezzo richiesto: " + eur.format(Math.round(s.richiesto)));
+      e.imposte.righe.forEach(function(x){ r.push("  " + x.t + ": " + eur.format(Math.round(x.v))); });
+      if(s.notaio) r.push("  Notaio: " + eur.format(Math.round(s.notaio)));
+      if(e.agenzia) r.push("  Agenzia: " + eur.format(Math.round(e.agenzia)));
+      if(s.lavori) r.push("  Lavori: " + eur.format(Math.round(s.lavori)));
+      r.push("ESBORSO TOTALE: " + eur.format(Math.round(e.esborso)) + "  →  " + segno(e.esborso - e.netto) + " (" + pct(e.scarto) + ")");
+    }
+    return r.join("\n");
+  }
+
+  $("btn-copia").addEventListener("click", function(){
+    var t = testoRiepilogo(), area = $("riepilogo");
+    var mostra = function(){ area.hidden = false; area.value = t; area.select(); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){
+        $("btn-copia").textContent = "Copiato";
+        setTimeout(function(){ $("btn-copia").textContent = "Copia riepilogo"; }, 1600);
+      }).catch(mostra);
+    } else mostra();
+  });
+
+  /* ---------- avvio ---------- */
+  var TUTTI = ["nome","fonte","supbase","prezzomin","prezzomax","extra","condominio","energia",
+               "altritributi","riferimento","tasso","richiesto","rendita","notaio","agenzia","lavori"]
+              .concat(SELECTS);
+  TUTTI.forEach(function(id){ $(id).addEventListener("input", calcola); });
+
+  calcola();
+  caricaArchivio();
+})();
+</script>
+</body>
+</html>
