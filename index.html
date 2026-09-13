@@ -233,6 +233,11 @@
     <select id="riscaldamento"></select>
   </div>
   <div class="campo">
+    <label for="parcheggio">Parcheggio</label>
+    <select id="parcheggio"></select>
+    <div class="aiuto">Usa questa voce per la comodità di parcheggio. Se box o posto auto sono già inseriti tra le superfici accessorie, mantieni un coefficiente prudente per evitare doppi conteggi.</div>
+  </div>
+  <div class="campo">
     <label for="locativo">Stato locativo</label>
     <select id="locativo"></select>
   </div>
@@ -352,7 +357,7 @@
 
     <p><strong>Il punto debole resta la base.</strong> Un errore del 10% sul €/mq pesa più di quattro coefficienti azzeccati. Per questo il prezzo si inserisce come forbice minimo–massimo (le quotazioni OMI dell'Agenzia delle Entrate sono già in questa forma) e la stima esce come intervallo. Non usare il prezzo richiesto per questa casa come base: il conto girerebbe su sé stesso.</p>
 
-    <p><strong>Doppio conteggio.</strong> «Da ristrutturare» e «edificio scadente» descrivono in parte lo stesso difetto, così come luminosità ed esposizione. Sono voci separate perché così stanno nelle tue tabelle, ma sommandole rischi di penalizzare due volte la stessa cosa.</p>
+    <p><strong>Doppio conteggio.</strong> «Da ristrutturare» e «edificio scadente» descrivono in parte lo stesso difetto, così come luminosità ed esposizione. Sono voci separate perché così stanno nelle tue tabelle, ma sommandole rischi di penalizzare due volte la stessa cosa. Lo stesso vale per il parcheggio: se box o posto auto sono già valorizzati come superficie accessoria, usa il coefficiente parcheggio solo per rappresentare la comodità o difficoltà residua, non per attribuire di nuovo l'intero valore della pertinenza.</p>
   </details>
 
 </div>
@@ -408,6 +413,17 @@
       {t:"Centralizzato",                      v: 0.00},
       {t:"Assente",                            v:-0.05}
     ],
+    parcheggio: [
+      {t:"Neutro / già valorizzato nella superficie", v: 0.00},
+      {t:"Nessun posto privato, parcheggio facile",   v: 0.00},
+      {t:"Nessun posto privato, parcheggio difficile",v:-0.03},
+      {t:"Nessun posto privato, parcheggio molto difficile", v:-0.05},
+      {t:"Posto condominiale non assegnato",          v: 0.01},
+      {t:"Posto auto scoperto esclusivo",              v: 0.02},
+      {t:"Posto auto coperto esclusivo",               v: 0.03},
+      {t:"Box / garage esclusivo",                      v: 0.04},
+      {t:"Due o più posti / box",                       v: 0.05}
+    ],
     locativo: [
       {t:"Libera",                                 v: 0.00},
       {t:"Locata a canone libero (4+4)",           v:-0.20},
@@ -447,7 +463,7 @@
       sel.appendChild(o);
     });
   }
-  var SELECTS = ["piano","conservazione","luminosita","vista","eta","statoedificio","riscaldamento","locativo"];
+  var SELECTS = ["piano","conservazione","luminosita","vista","eta","statoedificio","riscaldamento","parcheggio","locativo"];
   SELECTS.forEach(function(k){ riempi($(k), T[k]); });
 
   function rigaSpazio(i, mq, q){
@@ -491,7 +507,7 @@
   // stato di partenza = il primo esempio del foglio: 90 mq × 1600 → 125.280 €
   $("piano").value = 3; $("conservazione").value = 0; $("luminosita").value = 1;
   $("vista").value = 2; $("eta").value = 1; $("statoedificio").value = 2;
-  $("riscaldamento").value = 0; $("locativo").value = 0;
+  $("riscaldamento").value = 0; $("parcheggio").value = 0; $("locativo").value = 0;
 
   var gruppi = {asc:"si", giardino:"si", modo:"somma", venditore:"privato", primacasa:"si"};
   function aggiornaGruppo(id){
@@ -566,6 +582,7 @@
     var e = T.eta[s.eta], se = T.statoedificio[s.statoedificio];
     v.push({t:"Edificio", d:e.t + ", " + se.t.toLowerCase(), c:e[se.k]});
     v.push({t:"Riscaldamento", d:T.riscaldamento[s.riscaldamento].t, c:T.riscaldamento[s.riscaldamento].v});
+    v.push({t:"Parcheggio", d:T.parcheggio[s.parcheggio].t, c:T.parcheggio[s.parcheggio].v});
     v.push({t:"Stato locativo", d:T.locativo[s.locativo].t, c:T.locativo[s.locativo].v});
     var x = (s.extra || 0)/100;
     if(x) v.push({t:"Rettifica libera", d:"inserita a mano", c:x});
@@ -764,7 +781,7 @@
     aggiornaGruppo("asc"); aggiornaGruppo("giardino");
     $("conservazione").value = 1; $("luminosita").value = 2; $("vista").value = 2;
     $("eta").value = 0; $("statoedificio").value = 1; $("riscaldamento").value = 2;
-    $("locativo").value = 0; $("extra").value = 0;
+    $("parcheggio").value = 0; $("locativo").value = 0; $("extra").value = 0;
     calcola();
   });
 
