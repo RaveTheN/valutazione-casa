@@ -226,6 +226,7 @@
     <div class="campo">
       <label for="statoedificio">Stato edificio</label>
       <select id="statoedificio"></select>
+      <div class="aiuto" id="nota-edificio"></div>
     </div>
   </div>
   <div class="campo">
@@ -398,14 +399,17 @@
       {t:"Completamente interna", v:-0.10}
     ],
     eta: [
-      {t:"1 – 20 anni",   ottimo:0.00, normale:0, scadente:-0.05},
-      {t:"20 – 40 anni",  ottimo:0.05, normale:0, scadente:-0.10},
-      {t:"Oltre 40 anni", ottimo:0.10, normale:0, scadente:-0.15}
+      {t:"1 – 20 anni",   eccellente:0.03, ottimo:0.02, buono:0.01, normale:0.00, mediocre:-0.025, scadente:-0.05},
+      {t:"20 – 40 anni",  eccellente:0.05, ottimo:0.03, buono:0.01, normale:0.00, mediocre:-0.05,  scadente:-0.10},
+      {t:"Oltre 40 anni", eccellente:0.10, ottimo:0.07, buono:0.03, normale:0.00, mediocre:-0.075, scadente:-0.15}
     ],
     statoedificio: [
-      {t:"Ottimo stato", k:"ottimo"},
-      {t:"Normale",      k:"normale"},
-      {t:"Scadente",     k:"scadente"}
+      {t:"Eccellente — parti comuni appena riqualificate", k:"eccellente", n:"Facciate, tetto, scale, impianti e parti comuni recentemente rifatti o in condizioni paragonabili al nuovo."},
+      {t:"Ottimo — molto ben mantenuto",                   k:"ottimo",     n:"Parti comuni curate, nessun intervento rilevante prevedibile a breve."},
+      {t:"Buono — usura lieve",                            k:"buono",      n:"Edificio complessivamente sano, con normali segni d'uso e piccoli interventi non urgenti."},
+      {t:"Normale — manutenzione ordinaria",               k:"normale",    n:"Condizioni coerenti con età e tipologia, senza particolari pregi o criticità."},
+      {t:"Mediocre — manutenzioni visibili da fare",       k:"mediocre",   n:"Parti comuni trascurate o lavori prevedibili, ma senza degrado strutturale evidente."},
+      {t:"Scadente — degrado o lavori importanti",         k:"scadente",   n:"Degrado marcato o interventi rilevanti su facciate, coperture, impianti o parti comuni."}
     ],
     riscaldamento: [
       {t:"Autonomo",                           v: 0.05},
@@ -466,6 +470,16 @@
   var SELECTS = ["piano","conservazione","luminosita","vista","eta","statoedificio","riscaldamento","parcheggio","locativo"];
   SELECTS.forEach(function(k){ riempi($(k), T[k]); });
 
+  function migraStatoEdificio(s){
+    if(!s) return s;
+    if((s.versioneModello || 1) < 2){
+      var vecchi = {0:1, 1:3, 2:5}; // ottimo→ottimo, normale→normale, scadente→scadente
+      if(vecchi[s.statoedificio] != null) s.statoedificio = vecchi[s.statoedificio];
+      s.versioneModello = 2;
+    }
+    return s;
+  }
+
   function rigaSpazio(i, mq, q){
     var opzioni = TIPI.map(function(t,k){
       return '<option value="' + k + '"' + (k === i ? " selected" : "") + '>' + t.t + '</option>';
@@ -506,7 +520,7 @@
 
   // stato di partenza = il primo esempio del foglio: 90 mq × 1600 → 125.280 €
   $("piano").value = 3; $("conservazione").value = 0; $("luminosita").value = 1;
-  $("vista").value = 2; $("eta").value = 1; $("statoedificio").value = 2;
+  $("vista").value = 2; $("eta").value = 1; $("statoedificio").value = 5;
   $("riscaldamento").value = 0; $("parcheggio").value = 0; $("locativo").value = 0;
 
   var gruppi = {asc:"si", giardino:"si", modo:"somma", venditore:"privato", primacasa:"si"};
@@ -526,7 +540,7 @@
 
   /* ---------- lettura e scrittura dello stato ---------- */
   function leggiStato(){
-    var s = {
+    var s = { versioneModello:2,
       nome: $("nome").value.trim(), fonte: $("fonte").value.trim(),
       supbase: n($("supbase")),
       spazi: Array.prototype.map.call(document.querySelectorAll("#spazi .spazio"), function(r){
@@ -546,6 +560,7 @@
   }
 
   function scriviStato(s){
+    s = migraStatoEdificio(s);
     $("nome").value = s.nome || "";
     $("fonte").value = s.fonte || "";
     gruppi.modo = s.modo || "somma";
@@ -686,7 +701,7 @@
   function caricaArchivio(){
     if(!archivioAttivo){ avviso("Questo browser non permette di salvare: usa «Copia riepilogo»."); disegnaArchivio(); return; }
     MEM.leggi()
-      .then(function(t){ archivio = t ? JSON.parse(t) : []; })
+      .then(function(t){ archivio = t ? JSON.parse(t).map(migraStatoEdificio) : []; })
       .catch(function(){ archivio = []; })
       .then(disegnaArchivio);
   }
@@ -780,7 +795,7 @@
     $("piano").value = 4; gruppi.asc = "si"; gruppi.giardino = "si";
     aggiornaGruppo("asc"); aggiornaGruppo("giardino");
     $("conservazione").value = 1; $("luminosita").value = 2; $("vista").value = 2;
-    $("eta").value = 0; $("statoedificio").value = 1; $("riscaldamento").value = 2;
+    $("eta").value = 0; $("statoedificio").value = 3; $("riscaldamento").value = 2;
     $("parcheggio").value = 0; $("locativo").value = 0; $("extra").value = 0;
     calcola();
   });
@@ -792,6 +807,7 @@
     $("campo-giardino").hidden = !T.piano[+$("piano").value].giardino;
     $("campo-rendita").hidden = gruppi.venditore !== "privato";
     $("nota-luce").textContent = T.luminosita[+$("luminosita").value].n;
+    $("nota-edificio").textContent = T.statoedificio[+$("statoedificio").value].n;
 
     var s = leggiStato();
     var e = esito(s);
