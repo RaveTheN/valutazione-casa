@@ -595,7 +595,8 @@
     v.push({t:"Luminosità", d:T.luminosita[s.luminosita].t, c:T.luminosita[s.luminosita].v});
     v.push({t:"Esposizione", d:T.vista[s.vista].t, c:T.vista[s.vista].v});
     var e = T.eta[s.eta], se = T.statoedificio[s.statoedificio];
-    v.push({t:"Edificio", d:e.t + ", " + se.t.toLowerCase(), c:e[se.k]});
+    v.push({t:"Età edificio", d:e.t, c:0});
+    v.push({t:"Stato edificio", d:se.t + " · coefficiente per edificio di " + e.t.toLowerCase(), c:e[se.k]});
     v.push({t:"Riscaldamento", d:T.riscaldamento[s.riscaldamento].t, c:T.riscaldamento[s.riscaldamento].v});
     v.push({t:"Parcheggio", d:T.parcheggio[s.parcheggio].t, c:T.parcheggio[s.parcheggio].v});
     v.push({t:"Stato locativo", d:T.locativo[s.locativo].t, c:T.locativo[s.locativo].v});
