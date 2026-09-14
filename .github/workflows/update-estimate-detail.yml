@@ -1,0 +1,58 @@
+name: Update estimate detail
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-estimate-detail.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare patch
+        shell: bash
+        run: |
+          cat > /tmp/patch.py <<'PY'
+          from pathlib import Path
+          import sys
+
+          p = Path(sys.argv[1])
+          s = p.read_text(encoding='utf-8')
+
+          old = '''    var e = T.eta[s.eta], se = T.statoedificio[s.statoedificio];\n    v.push({t:"Edificio", d:e.t + ", " + se.t.toLowerCase(), c:e[se.k]});\n    v.push({t:"Riscaldamento", d:T.riscaldamento[s.riscaldamento].t, c:T.riscaldamento[s.riscaldamento].v});\n    v.push({t:"Parcheggio", d:T.parcheggio[s.parcheggio].t, c:T.parcheggio[s.parcheggio].v});'''
+          new = '''    var e = T.eta[s.eta], se = T.statoedificio[s.statoedificio];\n    v.push({t:"Età edificio", d:e.t, c:0});\n    v.push({t:"Stato edificio", d:se.t + " · coefficiente per edificio di " + e.t.toLowerCase(), c:e[se.k]});\n    v.push({t:"Riscaldamento", d:T.riscaldamento[s.riscaldamento].t, c:T.riscaldamento[s.riscaldamento].v});\n    v.push({t:"Parcheggio", d:T.parcheggio[s.parcheggio].t, c:T.parcheggio[s.parcheggio].v});'''
+
+          if old not in s:
+              raise SystemExit('Anchor not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Patch main
+        shell: bash
+        run: |
+          python /tmp/patch.py index.html
+          rm -f .github/workflows/update-estimate-detail.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/update-estimate-detail.yml
+          git commit -m "Update estimate detail for building state and parking"
+          git push origin main
+
+      - name: Patch gh-pages
+        shell: bash
+        run: |
+          git fetch origin gh-pages
+          git checkout gh-pages
+          python /tmp/patch.py index.html
+          git add index.html
+          git commit -m "Publish updated estimate detail"
+          git push origin gh-pages
